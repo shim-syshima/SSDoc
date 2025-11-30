@@ -25,7 +25,7 @@ namespace SummaryDocumentation.Core.Symbols
         /// Performs the CreateDocumentation operation.
         /// </summary>
         /// <param name="symbol">The symbol.</param>
-        /// <returns>The documentationmodel result.</returns>
+        /// <returns>The documentation model result.</returns>
         public DocumentationModel CreateDocumentation(ISymbol symbol)
         {
             var method = (IMethodSymbol)symbol;

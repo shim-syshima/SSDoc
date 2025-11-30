@@ -5,8 +5,6 @@ It uses Roslyn APIs to detect symbols, analyze source structure, and insert docu
 
 <img src="banner.png" width="100%" maxw alt="SSDoc Preview Image" />
 
-(*Replace the above path with your actual image file when publishing*)
-
 ---
 
 ## Features

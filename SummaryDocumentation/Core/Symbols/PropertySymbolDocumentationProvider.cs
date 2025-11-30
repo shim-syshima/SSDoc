@@ -23,8 +23,8 @@ namespace SummaryDocumentation.Core.Symbols
         /// <summary>
         /// Performs the CreateDocumentation operation.
         /// </summary>
-        /// <param name="symbol">The symbol parameter.</param>
-        /// <returns>The documentationmodel result.</returns>
+        /// <param name="symbol">The symbol.</param>
+        /// <returns>The documentation model result.</returns>
         public DocumentationModel CreateDocumentation(ISymbol symbol)
         {
             if (symbol is not IPropertySymbol property)

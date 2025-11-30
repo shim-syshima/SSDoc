@@ -20,10 +20,14 @@ namespace SummaryDocumentation.Core.Symbols
             return symbol is INamedTypeSymbol;
         }
 
+        /// <summary>
+        /// Performs the CreateDocumentation operation.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <returns>The documentation model result.</returns>
         public DocumentationModel CreateDocumentation(ISymbol symbol)
         {
-            var namedType = symbol as INamedTypeSymbol;
-            if (namedType == null)
+            if (symbol is not INamedTypeSymbol namedType)
             {
                 return null;
             }

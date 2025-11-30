@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="arm64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="SSDoc/SSDoc.csproj" Id="9619ab91-7f21-4cfc-8b5b-c3703775f15c">
+    <Platform Solution="*|arm64" Project="arm64" />
+    <Platform Solution="*|x86" Project="x86" />
+  </Project>
+  <Project Path="SummaryDocumentation/SummaryDocumentation.csproj" Id="e61e11b9-3904-407e-9f1e-74759afdcbca" />
+</Solution>

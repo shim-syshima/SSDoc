@@ -1,9 +1,11 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace SSDoc.Roslyn
 {
@@ -32,34 +34,54 @@ namespace SSDoc.Roslyn
             if (root == null)
                 return document.Project.Solution;
 
-            var syntaxRef = symbol.DeclaringSyntaxReferences.Length > 0
-                ? symbol.DeclaringSyntaxReferences[0]
-                : null;
-
-            if (syntaxRef == null)
+            var syntaxRefs = symbol.DeclaringSyntaxReferences;
+            if (syntaxRefs == null || syntaxRefs.Length == 0)
                 return document.Project.Solution;
 
-            var node = await syntaxRef.GetSyntaxAsync(token);
+            var syntaxRef = syntaxRefs[0];
+            var node = await syntaxRef.GetSyntaxAsync(token).ConfigureAwait(false);
+
             var leading = node.GetLeadingTrivia();
+            var filteredTrivia = new List<SyntaxTrivia>();
 
-            var indent = ExtractIndent(leading);
+            foreach (var trivia in leading)
+            {
+                var structure = trivia.GetStructure();
+                var isDocComment = structure is DocumentationCommentTriviaSyntax;
 
-            var prefixLeading = RemoveLastIndentTrivia(leading);
+                if (isDocComment)
+                {
+                    if (filteredTrivia.Count > 0 &&
+                        filteredTrivia[filteredTrivia.Count - 1].IsKind(SyntaxKind.WhitespaceTrivia))
+                    {
+                        filteredTrivia.RemoveAt(filteredTrivia.Count - 1);
+                    }
 
-            var indentedDoc = BuildIndentedDocumentationWithTrailingNewLine(documentationText, indent);
+                    continue;
+                }
 
-            var docTrivia = SyntaxFactory.ParseLeadingTrivia(indentedDoc);
+                filteredTrivia.Add(trivia);
+            }
 
-            var newLeading = prefixLeading
+            var baseTrivia = SyntaxFactory.TriviaList(filteredTrivia);
+
+            var indent = ExtractIndent(baseTrivia);
+            var prefixTrivia = RemoveLastIndentTrivia(baseTrivia);
+
+            var docTrivia = SyntaxFactory.ParseLeadingTrivia(
+                BuildIndentedDocumentationWithTrailingNewLine(documentationText, indent));
+
+            var newLeading = prefixTrivia
                 .AddRange(docTrivia)
                 .Add(SyntaxFactory.Whitespace(indent));
-
 
             var newNode = node.WithLeadingTrivia(newLeading);
             var newRoot = root.ReplaceNode(node, newNode);
 
             return document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newRoot);
         }
+
+
 
         private static string ExtractIndent(SyntaxTriviaList trivia)
         {

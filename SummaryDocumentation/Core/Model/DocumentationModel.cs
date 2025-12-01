@@ -18,8 +18,6 @@ namespace SummaryDocumentation.Core.Model
         public IList<ParameterDocumentation> Parameters { get; } =
             new List<ParameterDocumentation>();
 
-
-
         /// <summary>
         /// Gets the TypeParameters.
         /// </summary>

@@ -217,8 +217,10 @@
     <Compile Include="Core\Model\DocumentationModel.cs" />
     <Compile Include="Core\Model\ParameterDocumentation.cs" />
     <Compile Include="Core\Model\TypeParameterDocumentation.cs" />
+    <Compile Include="Core\Symbols\EventSymbolDocumentationProvider.cs" />
     <Compile Include="Core\Symbols\ISymbolDocumentationProvider.cs" />
     <Compile Include="Core\Symbols\MethodSymbolDocumentationProvider.cs" />
+    <Compile Include="Core\Symbols\FieldSymbolDocumentationProvider.cs" />
     <Compile Include="Core\Symbols\PropertySymbolDocumentationProvider.cs" />
     <Compile Include="Core\Symbols\SymbolDocumentationService.cs" />
     <Compile Include="Core\Symbols\TypeSymbolDocumentationProvider.cs" />

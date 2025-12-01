@@ -15,7 +15,7 @@ namespace SummaryDocumentation.Core.Generation
         /// Performs the SplitIdentifier operation.
         /// </summary>
         /// <param name="name">The name.</param>
-        /// <returns>The ilist result.</returns>
+        /// <returns>The list result.</returns>
         public static IList<string> SplitIdentifier(string name)
         {
             var result = new List<string>();

@@ -36,10 +36,8 @@ namespace SSDoc.Roslyn
         {
             var solution = _workspace.CurrentSolution;
 
-            var document = solution.Projects
-                .SelectMany(p => p.Documents)
-                .FirstOrDefault(d => string.Equals(d.FilePath, caret.FilePath, StringComparison.OrdinalIgnoreCase));
-
+            var documentId = solution.GetDocumentIdsWithFilePath(caret.FilePath);
+            var document = solution.GetDocument(documentId.FirstOrDefault());
             if (document == null)
                 throw new InvalidOperationException("Document not found: " + caret.FilePath);
 

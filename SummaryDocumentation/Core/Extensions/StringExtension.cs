@@ -14,7 +14,7 @@ namespace SummaryDocumentation.Core.Extensions
         /// <returns>The string result.</returns>
         public static string ToSimple(this string text)
         {
-            return NamePhraseHelper.ToNounPhrase(text);
+            return NamePhraseHelper.ToTypeNounPhrase(text);
         }
     }
 }

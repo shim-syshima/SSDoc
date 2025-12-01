@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="net.syshima.SSDoc" Version="1.1" Language="en-US" Publisher="System Shimamura" />
+        <Identity Id="net.syshima.SSDoc" Version="1.0.1" Language="en-US" Publisher="System Shimamura" />
         <DisplayName>SSDoc – C# XML Documentation Assistant</DisplayName>
         <Description xml:space="preserve">SSDoc – C# XML Documentation Assistant is a Visual Studio extension that generates StyleCop-friendly XML documentation comments for your C# code.
 

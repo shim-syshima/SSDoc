@@ -40,7 +40,8 @@ namespace SSDoc.Roslyn
                     node is PropertyDeclarationSyntax ||
                     node is EventDeclarationSyntax ||
                     node is IndexerDeclarationSyntax ||
-                    node is BaseTypeDeclarationSyntax) // class / struct / interface / enum
+                    node is FieldDeclarationSyntax ||
+                    node is BaseTypeDeclarationSyntax)
                 {
                     targetNode = node;
                     break;

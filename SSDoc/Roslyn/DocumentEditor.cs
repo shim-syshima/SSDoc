@@ -8,9 +8,9 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace SSDoc.Roslyn
 {
     /// <summary>
-    /// Represents the DocumentationInsertionService class.
+    /// Represents the DocumentEditor class.
     /// </summary>
-    public sealed class DocumentationInsertionService
+    public sealed class DocumentEditor
     {
         /// <summary>
         /// Performs the InsertAsync operation.

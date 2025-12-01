@@ -20,7 +20,9 @@ namespace SummaryDocumentation.Core.Symbols
             {
                 [SymbolKind.NamedType] = new TypeSymbolDocumentationProvider(),
                 [SymbolKind.Method] = new MethodSymbolDocumentationProvider(),
-                [SymbolKind.Property] = new PropertySymbolDocumentationProvider()
+                [SymbolKind.Property] = new PropertySymbolDocumentationProvider(),
+                [SymbolKind.Event] = new EventSymbolDocumentationProvider(),
+                [SymbolKind.Field] = new FieldSymbolDocumentationProvider()
             };
 
             _providers = dict;

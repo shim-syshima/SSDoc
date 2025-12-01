@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Shell;
 using System;
 using System.ComponentModel.Design;
 using System.Threading;
+using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 using SSDoc.Roslyn;
 using SSDoc.Services;
@@ -32,7 +33,7 @@ namespace SSDoc.Commands
         private RoslynContext _roslynContext;
 
         private readonly SymbolService _symbolService;
-        private readonly DocumentationInsertionService _insertionService;
+        private readonly DocumentEditor _insertionService;
         private readonly SymbolDocumentationService _documentationService;
 
         /// <summary>
@@ -67,11 +68,11 @@ namespace SSDoc.Commands
             _notifier = new VsShellNotifier(serviceProvider);
 
             _symbolService = new SymbolService();
-            _insertionService = new DocumentationInsertionService();
+            _insertionService = new DocumentEditor();
             _documentationService = new SymbolDocumentationService();
 
             var menuCommandId = new CommandID(CommandSet, CommandId);
-            var menuItem = new OleMenuCommand(ExecuteAsync, menuCommandId);
+            var menuItem = new OleMenuCommand(Execute, menuCommandId);
             commandService.AddCommand(menuItem);
         }
 
@@ -102,52 +103,60 @@ namespace SSDoc.Commands
             return true;
         }
 
-#pragma warning disable VSTHRD200
-        private void ExecuteAsync(object sender, EventArgs e)
-#pragma warning restore VSTHRD200
+        private void Execute(object sender, EventArgs e)
         {
+#pragma warning disable VSSDK007
             ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+#pragma warning restore VSSDK007
             {
                 await ExecuteInternalAsync(_package.DisposalToken);
-            });
+            }).Task.Forget();
         }
 
         private async Task ExecuteInternalAsync(CancellationToken cancellationToken)
         {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
-            if (!EnsureRoslynInitialized())
+            try
             {
-                return;
+                if (!EnsureRoslynInitialized())
+                {
+                    return;
+                }
+
+                var caret = _caretService.GetActiveCaretPosition();
+                if (!caret.HasValue)
+                {
+                    return;
+                }
+
+                var (document, semanticModel, position) =
+                    await _roslynContext.GetDocumentContextAsync(caret.Value, cancellationToken);
+
+                var symbol = await _symbolService.FindSymbolAtPositionAsync(
+                    document, semanticModel, position, cancellationToken);
+
+                if (symbol == null)
+                {
+                    return;
+                }
+
+                if (!_documentationService.TryCreateDocumentation(symbol, out var documentationText))
+                {
+                    return;
+                }
+
+                var newSolution = await _insertionService.InsertAsync(
+                    document, semanticModel, symbol, documentationText, cancellationToken);
+
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+                if (!_workspace.TryApplyChanges(newSolution))
+                {
+                    _notifier.Error("Failed to apply changes.");
+                }
             }
-
-            var caret = _caretService.GetActiveCaretPosition();
-            if (!caret.HasValue)
+            catch (Exception ex)
             {
-                return;
-            }
-
-            var (document, semanticModel, position) = await _roslynContext.GetDocumentContextAsync(caret.Value, cancellationToken);
-
-            var symbol = await _symbolService.FindSymbolAtPositionAsync(
-                document, semanticModel, position, cancellationToken);
-
-            if (symbol == null)
-            {
-                return;
-            }
-
-            if (!_documentationService.TryCreateDocumentation(symbol, out var documentationText))
-            {
-                return;
-            }
-
-            var newSolution = await _insertionService.InsertAsync(
-                document, semanticModel, symbol, documentationText, cancellationToken);
-
-            if (!_workspace.TryApplyChanges(newSolution))
-            {
-                _notifier.Error("Failed to apply changes.");
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+                _notifier.Error("An error occurred: " + ex.Message);
             }
         }
     }

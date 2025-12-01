@@ -15,7 +15,7 @@ namespace SSDoc.Roslyn
     public sealed class DocumentEditor
     {
         /// <summary>
-        /// Performs the InsertAsync operation.
+        /// Inserts the async.
         /// </summary>
         /// <param name="document">The document.</param>
         /// <param name="semanticModel">The semantic model.</param>

@@ -23,9 +23,9 @@ namespace SSDoc.Services
         }
 
         /// <summary>
-        /// Performs the GetActiveCaretPosition operation.
+        /// Gets the active caret position.
         /// </summary>
-        /// <returns>The nullable result.</returns>
+        /// <returns>The the nullable result.</returns>
         public CaretInfo? GetActiveCaretPosition()
         {
             ThreadHelper.ThrowIfNotOnUIThread();

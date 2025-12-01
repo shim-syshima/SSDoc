@@ -12,9 +12,9 @@ namespace SummaryDocumentation.Core.Symbols
     public sealed class MethodSymbolDocumentationProvider : ISymbolDocumentationProvider
     {
         /// <summary>
-        /// Performs the CanHandle operation.
+        /// Gets the can handle.
         /// </summary>
-        /// <param name="symbol">The symbol parameter.</param>
+        /// <param name="symbol">The symbol.</param>
         /// <returns>True if the operation succeeds; otherwise, false.</returns>
         public bool CanHandle(ISymbol symbol)
         {
@@ -74,10 +74,10 @@ namespace SummaryDocumentation.Core.Symbols
 
                     return string.Format(
                         CultureInfo.InvariantCulture,
-                        "Initializes a new instance of the <see cref=\"{0}\"/> class.",
-                        typeName);
+                        "Initializes a new instance of the {0} class.",
+                        typeName.ToSimple().ToLowerInvariant());
                 }
-                case MethodKind.StaticConstructor:
+
                 case MethodKind.Constructor when method.IsStatic:
                 {
                     var typeName = method.ContainingType != null
@@ -86,14 +86,24 @@ namespace SummaryDocumentation.Core.Symbols
 
                     return string.Format(
                         CultureInfo.InvariantCulture,
-                        "Initializes static members of the <see cref=\"{0}\"/> class.",
-                        typeName);
+                        "Initializes static members of the {0} class.",
+                        typeName.ToSimple().ToLowerInvariant());
                 }
+
                 default:
+                {   
+                    var summary = NamePhraseHelper.ToMethodSummary(method.Name);
+                    if (!string.IsNullOrEmpty(summary))
+                    {
+                        return summary;
+                    }
+
+                    var noun = NamePhraseHelper.ToNounPhrase(method.Name);
                     return string.Format(
                         CultureInfo.InvariantCulture,
                         "Performs the {0} operation.",
-                        method.Name);
+                        noun);
+                }
             }
         }
 
@@ -108,7 +118,7 @@ namespace SummaryDocumentation.Core.Symbols
                     core);
             }
 
-            var phrase = NamePhraseHelper.ToNounPhrase(parameter.Name);
+            var phrase = NamePhraseHelper.ToSimplePhrase(parameter.Name);
 
             return string.Format(
                 CultureInfo.InvariantCulture,

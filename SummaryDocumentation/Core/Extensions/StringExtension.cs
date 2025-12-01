@@ -1,4 +1,5 @@
-﻿using SummaryDocumentation.Core.Generation;
+﻿using System;
+using SummaryDocumentation.Core.Generation;
 
 namespace SummaryDocumentation.Core.Extensions
 {
@@ -14,7 +15,9 @@ namespace SummaryDocumentation.Core.Extensions
         /// <returns>The string result.</returns>
         public static string ToSimple(this string text)
         {
-            return NamePhraseHelper.ToTypeNounPhrase(text);
+            var phrase = NamePhraseHelper.ToTypeNounPhrase(text);
+            const string thePrefix = "the ";
+            return phrase.StartsWith(thePrefix, StringComparison.InvariantCulture) ? phrase.Replace(thePrefix, string.Empty) : phrase;
         }
     }
 }

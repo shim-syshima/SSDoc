@@ -12,7 +12,7 @@ namespace SSDoc.Roslyn
     public sealed class SymbolService
     {
         /// <summary>
-        /// Performs the FindSymbolAtPositionAsync operation.
+        /// Finds the symbol at position async.
         /// </summary>
         /// <param name="document">The document.</param>
         /// <param name="semanticModel">The semantic model.</param>

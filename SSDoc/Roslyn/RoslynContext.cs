@@ -25,10 +25,10 @@ namespace SSDoc.Roslyn
         }
 
         /// <summary>
-        /// Performs the GetDocumentContextAsync operation.
+        /// Gets the document context async.
         /// </summary>
-        /// <param name="caret">The caret parameter.</param>
-        /// <param name="token">The token parameter.</param>
+        /// <param name="caret">The caret.</param>
+        /// <param name="token">The token.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task<Tuple<Document, SemanticModel, int>> GetDocumentContextAsync(
             CaretInfo caret,

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace SummaryDocumentation.Core.Generation
             "Find", "Search", "Lookup", "Resolve",
             "Create", "Build", "Generate", "Construct",
             "Update", "Refresh", "Reload",
-            "Load", "Save", "Read", "Write",
+            "Load", "Save", "Read", "Write", "Unload", "Restore",
             "Open", "Close",
             "Start", "Stop", "Begin", "End",
             "Reset", "Restart",
@@ -32,14 +33,20 @@ namespace SummaryDocumentation.Core.Generation
             "Validate", "Verify", "Check", "Ensure",
             "Register", "Unregister",
             "Enable", "Disable", "Activate", "Deactivate",
-            "Initialize", "Init", "Finalize",
+            "Initialize", "Init", "Finalize", "Terminate",
             "Execute", "Invoke", "Call", "Raise", "Handle",
             "Schedule", "Cancel", "Abort",
             "Lock", "Unlock",
             "Attach", "Detach",
             "Authorize", "Authenticate",
+            "Extract",
+            "Protect", "Unprotect",
+            "Import", "Export",
+            "Press", "Release", "Toggle",
+            "Swap", "Match"
         };
 
+        // Acronym / 頭字語辞書
         private static readonly HashSet<string> KnownAcronyms = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "ID", "UID",
@@ -55,6 +62,7 @@ namespace SummaryDocumentation.Core.Generation
             "VS",
         };
 
+        // 不規則動詞の三単現マップ
         private static readonly Dictionary<string, string> IrregularVerbs =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -67,12 +75,11 @@ namespace SummaryDocumentation.Core.Generation
         /// <summary>
         /// Performs the SplitIdentifier operation.
         /// </summary>
-        /// <param name="name">The identifier.</param>
-        /// <returns>The split tokens.</returns>
+        /// <param name="name">The name.</param>
+        /// <returns>The list result.</returns>
         public static IList<string> SplitIdentifier(string name)
         {
             var result = new List<string>();
-
             if (string.IsNullOrEmpty(name))
                 return result;
 
@@ -98,7 +105,7 @@ namespace SummaryDocumentation.Core.Generation
                     {
                         Flush(sb, result);
                     }
-                    // Letter → Digit / Digit → Letter
+                    // Letter ↔ Digit
                     else if ((char.IsLetter(prev) && char.IsDigit(c)) ||
                              (char.IsDigit(prev) && char.IsLetter(c)))
                     {
@@ -126,7 +133,7 @@ namespace SummaryDocumentation.Core.Generation
         }
 
         /// <summary>
-        /// Gets the to simple words.
+        /// Converts to the simple words.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>The string result.</returns>
@@ -143,6 +150,7 @@ namespace SummaryDocumentation.Core.Generation
                 {
                     if (IsAllUpper(t) && KnownAcronyms.Contains(t))
                     {
+                        // Acronym は大文字維持
                         return t;
                     }
 
@@ -153,13 +161,13 @@ namespace SummaryDocumentation.Core.Generation
         }
 
         /// <summary>
-        /// Converts to the noun phrase.
+        /// Performs the ToNounPhrase operation.
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>The string result.</returns>
         public static string ToNounPhrase(string name)
         {
-            var core = ToSimplePhrase(name);
+            var core = ToSimpleWords(name);
             if (string.IsNullOrEmpty(core))
                 return string.Empty;
 
@@ -167,29 +175,16 @@ namespace SummaryDocumentation.Core.Generation
         }
 
         /// <summary>
-        /// Converts to the simple phrase.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <returns>The string result.</returns>
-        public static string ToSimplePhrase(string name)
-        {
-            var core = ToSimpleWords(name);
-            if (string.IsNullOrEmpty(core))
-                return string.Empty;
-
-            return core;
-        }
-
-        /// <summary>
-        /// Converts to the type noun phrase.
+        /// Performs the ToTypeNounPhrase operation.
         /// </summary>
         /// <param name="typeName">The type name.</param>
-        /// <returns>The string result.</returns>
+        /// <returns>The noun phrase.</returns>
         public static string ToTypeNounPhrase(string typeName)
         {
             if (string.IsNullOrEmpty(typeName))
                 return string.Empty;
 
+            // I*** → インターフェース名とみなして I を剥がす
             if (typeName.Length > 2 &&
                 typeName[0] == 'I' &&
                 char.IsUpper(typeName[1]))
@@ -206,7 +201,8 @@ namespace SummaryDocumentation.Core.Generation
         /// <param name="name">The name.</param>
         /// <returns>The string result.</returns>
         /// <remarks>
-        /// Used with: "A value indicating whether {0}."
+        /// Intended to be used as:
+        /// "A value indicating whether {0}."
         /// </remarks>
         public static string ToBoolCorePhrase(string name)
         {
@@ -217,7 +213,7 @@ namespace SummaryDocumentation.Core.Generation
 
             var lower = name.ToLowerInvariant();
 
-            // isEnabled → "the value is enabled"
+            // isEnabled → the value is enabled
             if (lower.StartsWith("is", StringComparison.Ordinal) && name.Length > 2)
             {
                 var core = name.Substring(2);
@@ -225,7 +221,7 @@ namespace SummaryDocumentation.Core.Generation
                 return "the value is " + words;
             }
 
-            // hasChildren → "the value has children"
+            // hasChildren → the value has children
             if (lower.StartsWith("has", StringComparison.Ordinal) && name.Length > 3)
             {
                 var core = name.Substring(3);
@@ -233,7 +229,7 @@ namespace SummaryDocumentation.Core.Generation
                 return "the value has " + words;
             }
 
-            // canExecute → "the value can execute"
+            // canExecute → the value can execute
             if (lower.StartsWith("can", StringComparison.Ordinal) && name.Length > 3)
             {
                 var core = name.Substring(3);
@@ -241,7 +237,7 @@ namespace SummaryDocumentation.Core.Generation
                 return "the value can " + words;
             }
 
-            // shouldSerialize → "the value should serialize"
+            // shouldSerialize → the value should serialize
             if (lower.StartsWith("should", StringComparison.Ordinal) && name.Length > 6)
             {
                 var core = name.Substring(6);
@@ -249,7 +245,7 @@ namespace SummaryDocumentation.Core.Generation
                 return "the value should " + words;
             }
 
-            // mustXXX → "the value must XXX"
+            // mustValidate → the value must validate
             if (lower.StartsWith("must", StringComparison.Ordinal) && name.Length > 4)
             {
                 var core = name.Substring(4);
@@ -257,7 +253,7 @@ namespace SummaryDocumentation.Core.Generation
                 return "the value must " + words;
             }
 
-            // useCache → "the cache is used"
+            // useCache → the cache is used
             if (lower.StartsWith("use", StringComparison.Ordinal) && name.Length > 3)
             {
                 var core = name.Substring(3);
@@ -265,6 +261,7 @@ namespace SummaryDocumentation.Core.Generation
                 return "the " + words + " is used";
             }
 
+            // フォールバック: "the {name} is set"
             var simple = ToSimpleWords(name);
             return string.Format(
                 CultureInfo.InvariantCulture,
@@ -288,8 +285,10 @@ namespace SummaryDocumentation.Core.Generation
                 return string.Empty;
 
             var first = tokens[0];
+            var last = tokens[tokens.Count - 1];
 
-            // TryGetValue → Tries to get the value.
+            // 1) TryGetValue / TryParse など
+            //    TryGetValue → "Tries to get the value."
             if (string.Equals(first, "Try", StringComparison.OrdinalIgnoreCase) &&
                 tokens.Count > 1)
             {
@@ -307,6 +306,8 @@ namespace SummaryDocumentation.Core.Generation
                     nounPhrase);
             }
 
+            // 2) ToXxx: 変換系
+            //    ToSimplePhrase → "Converts to the simple phrase."
             if (string.Equals(first, "To", StringComparison.OrdinalIgnoreCase) &&
                 tokens.Count > 1)
             {
@@ -319,6 +320,98 @@ namespace SummaryDocumentation.Core.Generation
                     nounPhrase);
             }
 
+            // 3) AsXxx: キャスト/ビュー系
+            //    AsReadOnly → "Treats the value as read only."
+            if (string.Equals(first, "As", StringComparison.OrdinalIgnoreCase) &&
+                tokens.Count > 1)
+            {
+                var nounTokens = tokens.Skip(1).ToList();
+                var bareNoun = ToBareNounPhraseFromTokens(nounTokens); // "the ..." を外す
+
+                return string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Treats the value as {0}.",
+                    bareNoun);
+            }
+
+            // 4) FromXxx: ファクトリ/生成系
+            //    FromStream → "Creates an instance from the stream."
+            if (string.Equals(first, "From", StringComparison.OrdinalIgnoreCase) &&
+                tokens.Count > 1)
+            {
+                var nounTokens = tokens.Skip(1).ToList();
+                var nounPhrase = ToNounPhraseFromTokens(nounTokens);
+
+                return string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Creates an instance from {0}.",
+                    nounPhrase);
+            }
+
+            // 5) OnXxxChanged / OnXxxModified / OnXxxChanging: イベント系
+            //    OnFontSizeChanged  → "Occurs when the font size changes."
+            //    OnDocumentModified → "Occurs when the document is modified."
+            //    OnLayoutChanging   → "Occurs when the layout is changing."
+            if (string.Equals(first, "On", StringComparison.OrdinalIgnoreCase) &&
+                tokens.Count > 2)
+            {
+                var middleTokens = tokens
+                    .Skip(1)
+                    .Take(tokens.Count - 2)
+                    .ToList();
+
+                var nounPhrase = ToNounPhraseFromTokens(middleTokens);
+
+                if (string.Equals(last, "Changed", StringComparison.OrdinalIgnoreCase))
+                {
+                    return string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Occurs when {0} changes.",
+                        nounPhrase);
+                }
+
+                if (string.Equals(last, "Modified", StringComparison.OrdinalIgnoreCase))
+                {
+                    return string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Occurs when {0} is modified.",
+                        nounPhrase);
+                }
+
+                if (string.Equals(last, "Changing", StringComparison.OrdinalIgnoreCase))
+                {
+                    return string.Format(
+                        CultureInfo.InvariantCulture,
+                        "Occurs when {0} is changing.",
+                        nounPhrase);
+                }
+            }
+
+            // 6) XxxAsync: 非同期系
+            //    LoadAsync          → "Loads the value asynchronously."
+            //    TryGetValueAsync   → "Tries to get the value asynchronously."
+            if (methodName.EndsWith("Async", StringComparison.OrdinalIgnoreCase) &&
+                methodName.Length > "Async".Length)
+            {
+                var coreName = methodName.Substring(0, methodName.Length - "Async".Length);
+                var coreSummary = ToMethodSummary(coreName);
+
+                if (!string.IsNullOrEmpty(coreSummary))
+                {
+                    coreSummary = coreSummary.TrimEnd();
+
+                    if (coreSummary.EndsWith(".", StringComparison.Ordinal))
+                    {
+                        coreSummary = coreSummary.Substring(0, coreSummary.Length - 1);
+                    }
+
+                    return coreSummary + " asynchronously.";
+                }
+            }
+
+            // 7) 先頭が既知の動詞: 一般メソッド
+            //    ApplyValue    → "Applies the value."
+            //    FindFontFile  → "Finds the font file."
             if (KnownVerbs.Contains(first))
             {
                 var verb = ToThirdPersonSingular(first);
@@ -334,6 +427,7 @@ namespace SummaryDocumentation.Core.Generation
                     nounPhrase);
             }
 
+            // 8) フォールバック: 名詞始まりなど
             var defaultNoun = ToNounPhrase(methodName);
             if (string.IsNullOrEmpty(defaultNoun))
                 return string.Empty;
@@ -342,6 +436,51 @@ namespace SummaryDocumentation.Core.Generation
                 CultureInfo.InvariantCulture,
                 "Gets {0}.",
                 defaultNoun);
+        }
+
+        /// <summary>
+        /// Builds a method summary from an <see cref="IMethodSymbol"/>.
+        /// This overload is used to handle patterns that depend on the return type.
+        /// </summary>
+        /// <param name="method">The method symbol.</param>
+        /// <returns>The summary sentence.</returns>
+
+        public static string ToMethodSummary(IMethodSymbol method)
+        {
+            if (method == null)
+                return string.Empty;
+
+            var name = method.Name;
+            var tokens = SplitIdentifier(name);
+            if (tokens.Count == 0)
+                return string.Empty;
+
+            if (string.Equals(name, "Initialize", StringComparison.Ordinal) &&
+                method.Parameters.Length == 0 &&
+                method.ContainingType != null)
+            {
+                var typeName = method.ContainingType.Name;
+
+                return string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Initializes a new instance of the <see cref=\"{0}\"/> class.",
+                    typeName);
+            }
+
+            if (string.Equals(name, "Terminate", StringComparison.Ordinal) &&
+                method.Parameters.Length == 0 &&
+                method.ContainingType != null)
+            {
+                var typeName = method.ContainingType.Name;
+
+                return string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Terminates an instance of the <see cref=\"{0}\"/> class.",
+                    typeName);
+            }
+
+            // それ以外はメソッド名ベースのロジックにフォールバック
+            return ToMethodSummary(name);
         }
 
         private static void Flush(StringBuilder sb, IList<string> result)
@@ -370,6 +509,21 @@ namespace SummaryDocumentation.Core.Generation
             return "the " + core;
         }
 
+        // "the font file" → "font file" にするためのヘルパー。
+        private static string ToBareNounPhraseFromTokens(IList<string> tokens)
+        {
+            var nounPhrase = ToNounPhraseFromTokens(tokens);
+            const string ThePrefix = "the ";
+
+            if (nounPhrase.Length > ThePrefix.Length &&
+                nounPhrase.StartsWith(ThePrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return nounPhrase.Substring(ThePrefix.Length);
+            }
+
+            return nounPhrase;
+        }
+
         private static string ToThirdPersonSingular(string verb)
         {
             if (string.IsNullOrEmpty(verb))
@@ -383,6 +537,7 @@ namespace SummaryDocumentation.Core.Generation
 
             var lower = verb.ToLowerInvariant();
 
+            // 語尾が s, sh, ch, x, z, o → +es
             if (lower.EndsWith("s", StringComparison.Ordinal) ||
                 lower.EndsWith("sh", StringComparison.Ordinal) ||
                 lower.EndsWith("ch", StringComparison.Ordinal) ||
@@ -393,6 +548,7 @@ namespace SummaryDocumentation.Core.Generation
                 return verb + "es";
             }
 
+            // 子音 + y → ies
             if (lower.EndsWith("y", StringComparison.Ordinal) && lower.Length > 1)
             {
                 var beforeY = lower[lower.Length - 2];
@@ -402,6 +558,7 @@ namespace SummaryDocumentation.Core.Generation
                 }
             }
 
+            // それ以外は単純に s
             return verb + "s";
         }
 

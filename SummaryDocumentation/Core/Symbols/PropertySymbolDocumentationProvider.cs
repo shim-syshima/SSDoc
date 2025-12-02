@@ -78,7 +78,7 @@ namespace SummaryDocumentation.Core.Symbols
             }
 
             // 非 bool プロパティ
-            var noun = NamePhraseHelper.ToNounPhrase(property.Name);
+            var noun = NamePhraseHelper.ToSimpleWords(property.Name);
 
             if (hasGetter && hasSetter)
             {

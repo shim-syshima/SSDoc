@@ -1,8 +1,17 @@
-﻿using Microsoft.CodeAnalysis;
-using SummaryDocumentation.Core.Model;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MethodSymbolDocumentationProvider.cs" company="https://github.com/shiri47s/SummaryDocumentation">
+//  Copyright (c) shiri47s. All rights reserved.
+// </copyright>
+// <summary>
+//  This code is an implementation of the ASOBITicket.
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
 using System.Globalization;
+using Microsoft.CodeAnalysis;
 using SummaryDocumentation.Core.Extensions;
 using SummaryDocumentation.Core.Generation;
+using SummaryDocumentation.Core.Model;
 
 namespace SummaryDocumentation.Core.Symbols
 {
@@ -68,31 +77,27 @@ namespace SummaryDocumentation.Core.Symbols
             {
                 case MethodKind.Constructor when !method.IsStatic:
                 {
-                    var typeName = method.ContainingType != null
-                        ? method.ContainingType.Name
-                        : "UnknownType";
+                    var typeName = method.ContainingType.Name;
 
                     return string.Format(
                         CultureInfo.InvariantCulture,
-                        "Initializes a new instance of the {0} class.",
-                        typeName.ToSimple().ToLowerInvariant());
+                        "Initializes a new instance of the <see cref=\"{0}\"/> class.",
+                        typeName);
                 }
 
                 case MethodKind.Constructor when method.IsStatic:
                 {
-                    var typeName = method.ContainingType != null
-                        ? method.ContainingType.Name
-                        : "UnknownType";
+                    var typeName = method.ContainingType.Name;
 
                     return string.Format(
                         CultureInfo.InvariantCulture,
-                        "Initializes static members of the {0} class.",
-                        typeName.ToSimple().ToLowerInvariant());
+                        "Initializes static members of the <see cref=\"{0}\"/> class.",
+                        typeName);
                 }
 
                 default:
-                {   
-                    var summary = NamePhraseHelper.ToMethodSummary(method.Name);
+                {
+                    var summary = NamePhraseHelper.ToMethodSummary(method);
                     if (!string.IsNullOrEmpty(summary))
                     {
                         return summary;
@@ -118,20 +123,20 @@ namespace SummaryDocumentation.Core.Symbols
                     core);
             }
 
-            var phrase = NamePhraseHelper.ToSimplePhrase(parameter.Name);
+            var phrase = NamePhraseHelper.ToSimpleWords(parameter.Name);
 
             return string.Format(
                 CultureInfo.InvariantCulture,
                 "The {0}.",
                 phrase);
-
         }
 
         private static string GetReturnDescription(IMethodSymbol method)
         {
             var returnType = method.ReturnType;
 
-            if (returnType.Name == "Task" && returnType.ContainingNamespace?.ToDisplayString() == "System.Threading.Tasks")
+            if (returnType.Name == "Task" &&
+                returnType.ContainingNamespace?.ToDisplayString() == "System.Threading.Tasks")
             {
                 return "A task that represents the asynchronous operation.";
             }
@@ -139,10 +144,13 @@ namespace SummaryDocumentation.Core.Symbols
             if (returnType is INamedTypeSymbol { Name: "Task", TypeArguments.Length: 1 } named &&
                 named.ContainingNamespace?.ToDisplayString() == "System.Threading.Tasks")
             {
-                return $"A task that represents the asynchronous operation. The task result contains the {named.TypeArguments[0].Name.ToLowerInvariant()}.";
+                return
+                    $"A task that represents the asynchronous operation. The task result contains the {named.TypeArguments[0].Name.ToLowerInvariant()}.";
             }
 
-            return method.ReturnType.SpecialType == SpecialType.System_Boolean ? "True if the operation succeeds; otherwise, false." : $"The {returnType.Name.ToSimple().ToLowerInvariant()} result.";
+            return method.ReturnType.SpecialType == SpecialType.System_Boolean
+                ? "True if the operation succeeds; otherwise, false."
+                : $"The {returnType.Name.ToSimple().ToLowerInvariant()} result.";
         }
     }
 }

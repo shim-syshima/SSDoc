@@ -14,7 +14,7 @@ namespace SSDoc.Services
         private readonly IServiceProvider _services;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CaretService"/> class.
+        /// Initializes a new instance of the <see cref="caret service"/> class.
         /// </summary>
         /// <param name="services">The services.</param>
         public CaretService(IServiceProvider services)
@@ -25,7 +25,7 @@ namespace SSDoc.Services
         /// <summary>
         /// Gets the active caret position.
         /// </summary>
-        /// <returns>The the nullable result.</returns>
+        /// <returns>The nullable result.</returns>
         public CaretInfo? GetActiveCaretPosition()
         {
             ThreadHelper.ThrowIfNotOnUIThread();

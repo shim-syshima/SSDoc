@@ -43,8 +43,8 @@ namespace SummaryDocumentation.Core.Symbols
 
         private static string CreateSummary(IPropertySymbol property)
         {
-            var hasGetter = property.GetMethod != null;
-            var hasSetter = property.SetMethod != null;
+            var hasGetter = property.GetMethod is { DeclaredAccessibility: Accessibility.Public or Accessibility.Internal };
+            var hasSetter = property.SetMethod is { DeclaredAccessibility: Accessibility.Public or Accessibility.Internal };
 
             var isBool = property.Type.SpecialType == SpecialType.System_Boolean;
 

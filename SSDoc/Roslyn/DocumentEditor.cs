@@ -81,8 +81,6 @@ namespace SSDoc.Roslyn
             return document.Project.Solution.WithDocumentSyntaxRoot(document.Id, newRoot);
         }
 
-
-
         private static string ExtractIndent(SyntaxTriviaList trivia)
         {
             var ws = default(SyntaxTrivia);
